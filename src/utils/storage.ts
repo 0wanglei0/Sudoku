@@ -1,54 +1,51 @@
-import { GameProgress, Difficulty } from '../types';
+import { BoardType, Difficulty, GameProgress, TOTAL_LEVELS } from '../types';
 
-const STORAGE_KEY = 'memory_game_progress';
+const STORAGE_KEY_PREFIX = 'sudoku_progress';
 
-export const getProgress = (): GameProgress => {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : {};
-  } catch {
-    return {};
-  }
-};
+function getStorageKey(boardType: BoardType, difficulty: Difficulty): string {
+  return `${STORAGE_KEY_PREFIX}_${boardType}_${difficulty}`;
+}
 
-export const saveProgress = (progress: GameProgress): void => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-  } catch {
-    console.error('Failed to save progress');
-  }
-};
-
-export const getUnlockedLevel = (difficulty: Difficulty): number => {
-  const progress = getProgress();
-  return progress[difficulty]?.unlockedLevel || 1;
-};
-
-export const getCompletedLevels = (difficulty: Difficulty): number[] => {
-  const progress = getProgress();
-  return progress[difficulty]?.completedLevels || [];
-};
-
-export const completeLevel = (difficulty: Difficulty, level: number): void => {
-  const progress = getProgress();
-  const current = progress[difficulty] || { unlockedLevel: 1, completedLevels: [] };
+export function getGameProgress(boardType: BoardType, difficulty: Difficulty): GameProgress {
+  const key = getStorageKey(boardType, difficulty);
+  const stored = localStorage.getItem(key);
   
-  if (!current.completedLevels.includes(level)) {
-    current.completedLevels.push(level);
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return { unlockedLevel: 1, completedLevel: 0 };
+    }
   }
   
-  if (level >= current.unlockedLevel && level < 25) {
-    current.unlockedLevel = level + 1;
+  return { unlockedLevel: 1, completedLevel: 0 };
+}
+
+export function saveGameProgress(boardType: BoardType, difficulty: Difficulty, progress: GameProgress): void {
+  const key = getStorageKey(boardType, difficulty);
+  localStorage.setItem(key, JSON.stringify(progress));
+}
+
+export function markLevelCompleted(boardType: BoardType, difficulty: Difficulty, level: number): void {
+  const progress = getGameProgress(boardType, difficulty);
+  
+  if (level > progress.completedLevel) {
+    progress.completedLevel = level;
   }
   
-  progress[difficulty] = current;
-  saveProgress(progress);
-};
-
-export const resetProgress = (): void => {
-  try {
-    localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    console.error('Failed to reset progress');
+  if (level >= progress.unlockedLevel && level < TOTAL_LEVELS) {
+    progress.unlockedLevel = level + 1;
   }
-};
+  
+  saveGameProgress(boardType, difficulty, progress);
+}
+
+export function isLevelUnlocked(boardType: BoardType, difficulty: Difficulty, level: number): boolean {
+  const progress = getGameProgress(boardType, difficulty);
+  return level <= progress.unlockedLevel;
+}
+
+export function isLevelCompleted(boardType: BoardType, difficulty: Difficulty, level: number): boolean {
+  const progress = getGameProgress(boardType, difficulty);
+  return level <= progress.completedLevel;
+}

@@ -1,40 +1,53 @@
-export type Difficulty = 'easy' | 'basic' | 'intermediate' | 'advanced';
+export type BoardType = '4x4' | '9x9';
 
-export interface Card {
-  id: number;
-  value: string;
-  isFlipped: boolean;
-  isMatched: boolean;
-}
+export type Difficulty = 'easy' | 'normal' | 'medium' | 'hard';
 
-export interface DifficultyConfig {
-  key: Difficulty;
-  name: string;
-  gridSize: number;
-  pairsCount: number;
-  timeLimit: number;
-  description: string;
-  color: string;
+export interface Cell {
+  value: number | null;
+  isOriginal: boolean;
+  isSelected: boolean;
+  isHighlighted: boolean;
+  isError: boolean;
 }
 
 export interface GameProgress {
-  [difficulty: string]: {
-    unlockedLevel: number;
-    completedLevels: number[];
-  };
+  unlockedLevel: number;
+  completedLevel: number;
 }
 
 export interface GameState {
-  currentDifficulty: Difficulty | null;
-  currentLevel: number;
-  isPlaying: boolean;
-  isGameOver: boolean;
-  isWin: boolean;
-  matchedPairs: number;
-  totalPairs: number;
-  steps: number;
-  timeRemaining: number;
-  cards: Card[];
-  flippedCards: number[];
-  isChecking: boolean;
+  boardType: BoardType;
+  difficulty: Difficulty;
+  level: number;
+  board: Cell[][];
+  solution: number[][];
+  selectedCell: { row: number; col: number } | null;
+  timer: number;
+  isCompleted: boolean;
 }
+
+export interface DifficultyConfig {
+  label: string;
+  color: string;
+  bgColor: string;
+  removeRatio: number;
+}
+
+export const DIFFICULTY_CONFIGS: Record<Difficulty, DifficultyConfig> = {
+  easy: { label: '入门', color: 'text-green-600', bgColor: 'bg-green-50', removeRatio: 0.3 },
+  normal: { label: '初级', color: 'text-blue-600', bgColor: 'bg-blue-50', removeRatio: 0.45 },
+  medium: { label: '中级', color: 'text-yellow-600', bgColor: 'bg-yellow-50', removeRatio: 0.6 },
+  hard: { label: '高级', color: 'text-red-600', bgColor: 'bg-red-50', removeRatio: 0.75 },
+};
+
+export const BOARD_SIZE_MAP: Record<BoardType, number> = {
+  '4x4': 4,
+  '9x9': 9,
+};
+
+export const GRID_SIZE_MAP: Record<BoardType, number> = {
+  '4x4': 2,
+  '9x9': 3,
+};
+
+export const TOTAL_LEVELS = 25;
